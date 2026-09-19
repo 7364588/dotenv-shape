@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dotenv-shape"
+version = "0.1.0"
+description = "Check dotenv key names without printing configuration values."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = []
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.scripts]
+dotenv-shape = "dotenv_shape.cli:main"
+
+[project.urls]
+Repository = "https://github.com/7364588/dotenv-shape"
+Issues = "https://github.com/7364588/dotenv-shape/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+dotenv_shape = ["py.typed"]
