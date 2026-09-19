@@ -127,46 +127,55 @@ class CliTests(unittest.TestCase):
         environment = os.environ.copy()
         environment["PYTHONPATH"] = str(ROOT / "src")
         environment["PYTHONDONTWRITEBYTECODE"] = "1"
-        for arguments in (
-            [str(self.example), str(self.target)],
-            ["--json", str(self.example), str(self.target)],
-            ["--help"],
-            ["--version"],
-        ):
-            with self.subTest(arguments=arguments):
-                child = subprocess.Popen(
-                    [sys.executable, "-m", "dotenv_shape", *arguments],
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment,
-                )
-                try:
-                    child.stdout.close()
-                    child.stdout = None
-                    _, errors = child.communicate(timeout=10)
-                finally:
-                    if child.poll() is None:
-                        child.kill()
-                        child.communicate()
-                self.assertEqual(child.returncode, 2)
-                self.assertEqual(errors, b"")
+        for unbuffered in (False, True):
+            environment.pop("PYTHONUNBUFFERED", None)
+            if unbuffered:
+                environment["PYTHONUNBUFFERED"] = "1"
+            for arguments in (
+                [str(self.example), str(self.target)],
+                ["--json", str(self.example), str(self.target)],
+                ["--help"],
+                ["--version"],
+            ):
+                with self.subTest(arguments=arguments, unbuffered=unbuffered):
+                    child = subprocess.Popen(
+                        [sys.executable, "-m", "dotenv_shape", *arguments],
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment,
+                    )
+                    try:
+                        child.stdout.close()
+                        child.stdout = None
+                        _, errors = child.communicate(timeout=10)
+                    finally:
+                        if child.poll() is None:
+                            child.kill()
+                            child.communicate()
+                    self.assertEqual(child.returncode, 2)
+                    self.assertEqual(errors, b"")
 
     def test_closed_stderr_is_silent_exit_two(self):
         environment = os.environ.copy()
         environment["PYTHONPATH"] = str(ROOT / "src")
         environment["PYTHONDONTWRITEBYTECODE"] = "1"
-        child = subprocess.Popen(
-            [sys.executable, "-m", "dotenv_shape", "--unknown"],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment,
-        )
-        try:
-            child.stderr.close()
-            child.stderr = None
-            output, _ = child.communicate(timeout=10)
-        finally:
-            if child.poll() is None:
-                child.kill()
-                child.communicate()
-        self.assertEqual(child.returncode, 2)
-        self.assertEqual(output, b"")
+        for unbuffered in (False, True):
+            environment.pop("PYTHONUNBUFFERED", None)
+            if unbuffered:
+                environment["PYTHONUNBUFFERED"] = "1"
+            with self.subTest(unbuffered=unbuffered):
+                child = subprocess.Popen(
+                    [sys.executable, "-m", "dotenv_shape", "--unknown"],
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment,
+                )
+                try:
+                    child.stderr.close()
+                    child.stderr = None
+                    output, _ = child.communicate(timeout=10)
+                finally:
+                    if child.poll() is None:
+                        child.kill()
+                        child.communicate()
+                self.assertEqual(child.returncode, 2)
+                self.assertEqual(output, b"")
 
     def test_bare_cr_not_normalized_by_file_reader(self):
         self.target.write_bytes(b"KEY=value\rOTHER=value\r")

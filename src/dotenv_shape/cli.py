@@ -48,6 +48,8 @@ class _SafeParser(argparse.ArgumentParser):
         raise _UsageError
 
     def _print_message(self, message: str, file: TextIO | None = None) -> None:
+        # argparse's default implementation can swallow immediate OSError
+        # failures on unbuffered help/version output. Preserve our exit policy.
         if message:
             _write(message, file if file is not None else sys.stderr)
 
